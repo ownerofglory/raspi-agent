@@ -6,7 +6,7 @@
 VERSION       := $(shell git rev-parse --short HEAD)
 GIT_TAG       := $(shell git rev-list --tags --max-count=1)
 VERSION_TAG   := $(if $(GIT_TAG),$(shell git describe --tags $(GIT_TAG)),v0)
-#LDFLAGS       := -X 'main.Version=$(VERSION_TAG)-$(VERSION)'
+LDFLAGS       := '-X github.com/ownerofglory/raspi-agent/internal/http/handler.AppVersion=$(VERSION_TAG)-$(VERSION)'
 
 # --- Directories ---
 CMD_DIR_BE    := $(shell pwd)/cmd/raspi-agent-backend
@@ -36,7 +36,7 @@ build-backend: fmt
 	@mkdir -p $(BIN_DIR)
 	go mod tidy
 	GOOS=$(TARGET_OS_BE) GOARCH=$(TARGET_ARCH_BE) \
-	go build -o $(BIN_DIR)/$(TARGET_NAME_BE) $(CMD_DIR_BE)/main.go
+	go build -ldflags=$(LDFLAGS) -o $(BIN_DIR)/$(TARGET_NAME_BE) $(CMD_DIR_BE)/main.go
 
 build-onboard: fmt
 	@echo "Building onboard for OS=$(TARGET_OS_ONB) Arch=$(TARGET_ARCH_ONB)"
