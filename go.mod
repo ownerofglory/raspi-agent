@@ -8,3 +8,5 @@ require (
 )
 
 require github.com/go-chi/chi/v5 v5.2.3
+
+require github.com/gordonklaus/portaudio v0.0.0-20250206071425-98a94950218b
