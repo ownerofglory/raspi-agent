@@ -10,49 +10,101 @@ import (
 	"github.com/gordonklaus/portaudio"
 )
 
+// WAV format constants define the structure and encoding
+// of PCM (Pulse-Code Modulation) audio data inside a .wav file.
+const (
+	// pcmFormat identifies linear PCM (uncompressed) audio data.
+	// Value 1 means standard PCM encoding.
+	pcmFormat = 1
+
+	// bitsPerSample defines the resolution of each sample.
+	// 16 bits per sample = CD-quality audio.
+	bitsPerSample = 16
+
+	// bytesPerSample is derived from bitsPerSample (16 bits = 2 bytes).
+	// It’s used when calculating byte rates and data lengths.
+	bytesPerSample = bitsPerSample / 8
+
+	// fmtChunkSize is always 16 for PCM format WAV files.
+	// This chunk describes format details such as sample rate and bit depth.
+	fmtChunkSize = 16
+)
+
+// WAV header identifiers are the ASCII tags that mark sections of a .wav file.
+// Each is exactly 4 bytes and identifies a logical block of the file.
+const (
+	// riffHeader identifies the overall file as a RIFF container.
+	// It’s followed by the total file size and the "WAVE" format specifier.
+	riffHeader = "RIFF"
+
+	// waveHeader specifies that the RIFF container stores audio data in WAVE format.
+	waveHeader = "WAVE"
+
+	// fmtHeader marks the beginning of the format chunk,
+	// which stores sample rate, channel count, and encoding type.
+	fmtHeader = "fmt "
+
+	// dataHeader marks the beginning of the actual audio sample data.
+	dataHeader = "data"
+)
+
 type recorder struct{}
 
+// NewRecorder creates a new recorder instance
+func NewRecorder() *recorder {
+	return &recorder{}
+}
+
+// RecordingResult holds raw PCM data and metadata
 type RecordingResult struct {
 	data []int16
 	err  error
+
+	channels   int
+	chunkSize  int
+	sampleRate int
 }
 
+// GetError returns any error from the recording process
 func (r RecordingResult) GetError() error {
 	return r.err
 }
 
+// SaveTo writes the recorded PCM data as a WAV file to an io.Writer
 func (r RecordingResult) SaveTo(f io.Writer) error {
-	channels := 2
-	sampleRate := 4096
-	byteRate := sampleRate * channels * 2
-	blockAlign := channels * 2
-	dataLen := len(r.data) * 2
+	if r.err != nil {
+		return r.err
+	}
+
+	channels := r.channels
+	sampleRate := r.sampleRate
+	byteRate := sampleRate * channels * bytesPerSample
+	blockAlign := channels * bytesPerSample
+	dataLen := len(r.data) * bytesPerSample
 	riffLen := 36 + dataLen
 
-	f.Write([]byte("RIFF"))
+	// Write WAV headers
+	f.Write([]byte(riffHeader))
 	binary.Write(f, binary.LittleEndian, uint32(riffLen))
-	f.Write([]byte("WAVE"))
+	f.Write([]byte(waveHeader))
 
-	f.Write([]byte("fmt "))
-	binary.Write(f, binary.LittleEndian, uint32(16))         // chunk size
-	binary.Write(f, binary.LittleEndian, uint16(1))          // PCM format
-	binary.Write(f, binary.LittleEndian, uint16(channels))   // channels
-	binary.Write(f, binary.LittleEndian, uint32(sampleRate)) // sample rate
-	binary.Write(f, binary.LittleEndian, uint32(byteRate))   // byte rate
-	binary.Write(f, binary.LittleEndian, uint16(blockAlign)) // block align
-	binary.Write(f, binary.LittleEndian, uint16(16))         // bits per sample
+	f.Write([]byte(fmtHeader))
+	binary.Write(f, binary.LittleEndian, uint32(fmtChunkSize))
+	binary.Write(f, binary.LittleEndian, uint16(pcmFormat))
+	binary.Write(f, binary.LittleEndian, uint16(channels))
+	binary.Write(f, binary.LittleEndian, uint32(sampleRate))
+	binary.Write(f, binary.LittleEndian, uint32(byteRate))
+	binary.Write(f, binary.LittleEndian, uint16(blockAlign))
+	binary.Write(f, binary.LittleEndian, uint16(bitsPerSample))
 
-	f.Write([]byte("data"))
+	f.Write([]byte(dataHeader))
 	binary.Write(f, binary.LittleEndian, uint32(dataLen))
 	binary.Write(f, binary.LittleEndian, r.data)
 
 	return nil
 }
 
-func NewRecorder() *recorder {
-	return &recorder{}
-}
-
+// RecordAudio captures audio for a specified duration asynchronously
 func (r *recorder) RecordAudio(duration time.Duration) <-chan RecordingResult {
 	ch := make(chan RecordingResult)
 
@@ -134,7 +186,8 @@ func (r *recorder) RecordAudio(duration time.Duration) <-chan RecordingResult {
 					slog.Debug("Warning: input overflow (skipping some samples)")
 					continue
 				}
-				panic(err)
+				slog.Error("Streaming error", "err", err)
+				ch <- RecordingResult{data: nil, err: fmt.Errorf("streaming error: %v", err)}
 			}
 			buffer = append(buffer, chunk...)
 		}
@@ -145,7 +198,14 @@ func (r *recorder) RecordAudio(duration time.Duration) <-chan RecordingResult {
 			return
 		}
 
-		ch <- RecordingResult{data: buffer, err: nil}
+		slog.Debug("Recording finished successfully")
+		ch <- RecordingResult{
+			data:       buffer,
+			channels:   channels,
+			chunkSize:  chunkSize,
+			sampleRate: int(sampleRate),
+			err:        nil,
+		}
 	}()
 
 	return ch
