@@ -1,7 +1,9 @@
 package audio
 
 import (
+	"context"
 	"encoding/binary"
+	"errors"
 	"fmt"
 	"io"
 	"log/slog"
@@ -55,27 +57,17 @@ func NewRecorder() *recorder {
 	return &recorder{}
 }
 
-// RecordingResult holds raw PCM data and metadata
-type RecordingResult struct {
+// recordingResult holds raw PCM data and metadata
+type recordingResult struct {
 	data []int16
-	err  error
 
 	channels   int
 	chunkSize  int
 	sampleRate int
 }
 
-// GetError returns any error from the recording process
-func (r RecordingResult) GetError() error {
-	return r.err
-}
-
 // SaveTo writes the recorded PCM data as a WAV file to an io.Writer
-func (r RecordingResult) SaveTo(f io.Writer) error {
-	if r.err != nil {
-		return r.err
-	}
-
+func (r *recordingResult) SaveTo(f io.Writer) error {
 	channels := r.channels
 	sampleRate := r.sampleRate
 	byteRate := sampleRate * channels * bytesPerSample
@@ -104,109 +96,103 @@ func (r RecordingResult) SaveTo(f io.Writer) error {
 	return nil
 }
 
-// RecordAudio captures audio for a specified duration asynchronously
-func (r *recorder) RecordAudio(duration time.Duration) <-chan RecordingResult {
-	ch := make(chan RecordingResult)
+// RecordAudio captures audio for a specified duration
+func (r *recorder) RecordAudio(ctx context.Context, duration time.Duration) (*recordingResult, error) {
+	if err := portaudio.Initialize(); err != nil {
+		slog.Error("Unable to initialize portaudio", "err", err)
+		return nil, fmt.Errorf("unable to initialize portaudio: %v", err)
+	}
+	defer portaudio.Terminate()
 
-	go func() {
-		if err := portaudio.Initialize(); err != nil {
-			slog.Error("Unable to initialize portaudio", "err", err)
-			ch <- RecordingResult{data: nil, err: fmt.Errorf("unable to initialize portaudio: %v", err)}
-			return
+	slog.Debug("Portaudio initialized")
+
+	seconds := duration.Seconds()
+	channels := 1
+	chunkSize := 4096
+
+	devices, err := portaudio.Devices()
+	if err != nil {
+		slog.Error("Unable to get devices", "err", err)
+		return nil, fmt.Errorf("unable to get devices: %v", err)
+	}
+	slog.Debug("Available devices:")
+	for i, d := range devices {
+		slog.Debug("%d: %s (inputs=%d, outputs=%d, default SR=%.0f)\n",
+			i, d.Name, d.MaxInputChannels, d.MaxOutputChannels, d.DefaultSampleRate)
+	}
+
+	var inputDevice *portaudio.DeviceInfo
+	for _, d := range devices {
+		if d.MaxInputChannels > 0 {
+			inputDevice = d
+			break
 		}
-		defer portaudio.Terminate()
+	}
+	if inputDevice == nil {
+		slog.Error("no input device found")
+		return nil, fmt.Errorf("no input device found")
+	}
+	slog.Debug("Using input device:", "device", inputDevice.Name)
 
-		slog.Debug("Portaudio initialized")
+	// use device's default sample rate
+	sampleRate := inputDevice.DefaultSampleRate
+	totalFrames := sampleRate * seconds
 
-		seconds := duration.Seconds()
-		channels := 1
-		chunkSize := 4096
+	// prepare buffers
+	buffer := make([]int16, 0, int(totalFrames)*channels)
+	chunk := make([]int16, chunkSize*channels)
 
-		devices, err := portaudio.Devices()
-		if err != nil {
-			slog.Error("Unable to get devices", "err", err)
-			ch <- RecordingResult{data: nil, err: fmt.Errorf("unable to get devices: %v", err)}
-			return
-		}
-		slog.Debug("Available devices:")
-		for i, d := range devices {
-			slog.Debug("%d: %s (inputs=%d, outputs=%d, default SR=%.0f)\n",
-				i, d.Name, d.MaxInputChannels, d.MaxOutputChannels, d.DefaultSampleRate)
-		}
+	stream, err := portaudio.OpenStream(portaudio.StreamParameters{
+		Input: portaudio.StreamDeviceParameters{
+			Device:   inputDevice,
+			Channels: channels,
+			Latency:  inputDevice.DefaultLowInputLatency,
+		},
+		SampleRate:      sampleRate,
+		FramesPerBuffer: chunkSize,
+	}, chunk)
 
-		var inputDevice *portaudio.DeviceInfo
-		for _, d := range devices {
-			if d.MaxInputChannels > 0 {
-				inputDevice = d
-				break
-			}
-		}
-		if inputDevice == nil {
-			slog.Error("no input device found")
-			ch <- RecordingResult{data: nil, err: fmt.Errorf("no input device found")}
-			return
-		}
-		slog.Debug("Using input device:", "device", inputDevice.Name)
+	if err != nil {
+		slog.Error("Unable to open stream", "err", err)
+		return nil, fmt.Errorf("unable to open stream: %v", err)
+	}
+	defer stream.Close()
+	slog.Debug("Stream opened. Recording audio...")
 
-		// use device's default sample rate
-		sampleRate := inputDevice.DefaultSampleRate
-		totalFrames := sampleRate * seconds
+	if err := stream.Start(); err != nil {
+		slog.Error("Unable to start stream", "err", err)
+		return nil, fmt.Errorf("unable to start stream: %v", err)
+	}
 
-		// prepare buffers
-		buffer := make([]int16, 0, int(totalFrames)*channels)
-		chunk := make([]int16, chunkSize*channels)
-
-		stream, err := portaudio.OpenStream(portaudio.StreamParameters{
-			Input: portaudio.StreamDeviceParameters{
-				Device:   inputDevice,
-				Channels: channels,
-				Latency:  inputDevice.DefaultLowInputLatency,
-			},
-			SampleRate:      sampleRate,
-			FramesPerBuffer: chunkSize,
-		}, chunk)
-
-		if err != nil {
-			slog.Error("Unable to open stream", "err", err)
-			ch <- RecordingResult{data: nil, err: fmt.Errorf("unable to open stream: %v", err)}
-			return
-		}
-		defer stream.Close()
-		slog.Debug("Stream opened. Recording audio...")
-
-		if err := stream.Start(); err != nil {
-			slog.Error("Unable to start stream", "err", err)
-			ch <- RecordingResult{data: nil, err: fmt.Errorf("unable to start stream: %v", err)}
-			return
-		}
-
-		for framesRecorded := 0; framesRecorded < int(totalFrames); framesRecorded += chunkSize {
+	for framesRecorded := 0; framesRecorded < int(totalFrames); framesRecorded += chunkSize {
+		select {
+		case <-ctx.Done():
+			slog.Debug("Audio recording cancelled")
+			return nil, fmt.Errorf("Audio recording cancelled")
+		default:
 			if err := stream.Read(); err != nil {
-				if paErr, ok := err.(portaudio.Error); ok && paErr == portaudio.InputOverflowed {
+				var paErr portaudio.Error
+				if errors.As(err, &paErr) && errors.Is(paErr, portaudio.InputOverflowed) {
 					slog.Debug("Warning: input overflow (skipping some samples)")
 					continue
 				}
 				slog.Error("Streaming error", "err", err)
-				ch <- RecordingResult{data: nil, err: fmt.Errorf("streaming error: %v", err)}
+				return nil, fmt.Errorf("streaming error: %v", err)
 			}
 			buffer = append(buffer, chunk...)
 		}
+	}
 
-		if err := stream.Stop(); err != nil {
-			slog.Error("Unable to stop stream", "err", err)
-			ch <- RecordingResult{data: nil, err: fmt.Errorf("unable to stop stream: %v", err)}
-			return
-		}
+	if err := stream.Stop(); err != nil {
+		slog.Error("Unable to stop stream", "err", err)
+		return nil, fmt.Errorf("unable to stop stream: %v", err)
+	}
 
-		slog.Debug("Recording finished successfully")
-		ch <- RecordingResult{
-			data:       buffer,
-			channels:   channels,
-			chunkSize:  chunkSize,
-			sampleRate: int(sampleRate),
-			err:        nil,
-		}
-	}()
-
-	return ch
+	slog.Debug("Recording finished successfully")
+	return &recordingResult{
+		data:       buffer,
+		channels:   channels,
+		chunkSize:  chunkSize,
+		sampleRate: int(sampleRate),
+	}, nil
 }
