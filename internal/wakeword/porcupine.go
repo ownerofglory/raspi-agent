@@ -9,18 +9,18 @@ import (
 	porcupine "github.com/sigidagi/porcupine/binding/go/v2"
 )
 
-const modelPath = "model"
-const libraryPath = "model"
-
 type porcupineListener struct {
 	p *porcupine.Porcupine
 }
 
-func NewListener() *porcupineListener {
+func NewPorcupineListener(accessKey, modelPath, libraryPath, keywordPath string) *porcupineListener {
 	var p = &porcupine.Porcupine{
-		AccessKey:   "",
-		LibraryPath: libraryPath,
+		AccessKey:   accessKey,
 		ModelPath:   modelPath,
+		LibraryPath: libraryPath,
+		KeywordPaths: []string{
+			libraryPath,
+		},
 	}
 	return &porcupineListener{
 		p: p,
