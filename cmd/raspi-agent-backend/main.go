@@ -7,7 +7,7 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/httplog/v2"
 	"github.com/ownerofglory/raspi-agent/config"
-	"github.com/ownerofglory/raspi-agent/internal/http/handler"
+	"github.com/ownerofglory/raspi-agent/internal/http/v1/handler"
 	"log/slog"
 	"net/http"
 	"os"
