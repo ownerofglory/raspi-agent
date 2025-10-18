@@ -66,13 +66,13 @@ func (l *porcupineListener) Listen(ctx context.Context) error {
 		case <-ctx.Done():
 		default:
 			if err := stream.Read(); err != nil {
-				slog.Warn("stream read error:", err)
+				slog.Warn("stream read error:", "err", err)
 				continue
 			}
 
 			res, err := l.p.Process(buf)
 			if err != nil {
-				slog.Warn("porcupine process error:", err)
+				slog.Warn("porcupine process error:", "err", err)
 				continue
 			}
 			if res >= 0 {

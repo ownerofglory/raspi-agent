@@ -117,8 +117,8 @@ func (r *recorder) RecordAudio(ctx context.Context, duration time.Duration) (*re
 	}
 	slog.Debug("Available devices:")
 	for i, d := range devices {
-		slog.Debug("%d: %s (inputs=%d, outputs=%d, default SR=%.0f)\n",
-			i, d.Name, d.MaxInputChannels, d.MaxOutputChannels, d.DefaultSampleRate)
+		slog.Debug("", "idx", i,
+			"name", d.Name, "inputs", d.MaxInputChannels, "outputs", d.MaxOutputChannels, "SR", d.DefaultSampleRate)
 	}
 
 	var inputDevice *portaudio.DeviceInfo
