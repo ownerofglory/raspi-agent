@@ -18,6 +18,12 @@ import (
 // It returns a TranscribeResult with the recognized text, or an error if
 // transcription fails.
 type TranscriptionProvider interface {
+	// Transcribe converts spoken audio into text based on the parameters
+	// defined in the TranscribeRequest.
+	//
+	// The context allows for cancellation and timeout control.
+	// Returns a pointer to TranscribeResult on success or an error if
+	// the transcription process fails.
 	Transcribe(ctx context.Context, req domain.TranscribeRequest) (*domain.TranscribeResult, error)
 }
 
@@ -32,5 +38,12 @@ type TranscriptionProvider interface {
 //
 // The context allows cancellation and timeout control during generation.
 type SpeechProvider interface {
+	// ProduceSpeech converts the provided text into spoken audio.
+	//
+	// The returned channel streams SpeechResult messages containing
+	// audio chunks or metadata as they are produced. Implementations
+	// must close the channel when generation completes or fails.
+	//
+	// The context controls cancellation and timeout of the generation process.
 	ProduceSpeech(ctx context.Context, req *domain.SpeechRequest) (<-chan *domain.SpeechResult, error)
 }
