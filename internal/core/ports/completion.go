@@ -21,5 +21,5 @@ type CompletionProvider interface {
 	// Returns:
 	//   - A pointer to CompletionResult containing the generated text.
 	//   - An error if the generation process fails or the request is invalid.
-	CreateCompletion(ctx context.Context, req domain.CompletionRequest) (*domain.CompletionResult, error)
+	CreateCompletion(ctx context.Context, req *domain.CompletionRequest) (*domain.CompletionResult, error)
 }
