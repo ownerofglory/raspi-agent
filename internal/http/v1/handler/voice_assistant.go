@@ -19,10 +19,6 @@ const (
 	PostReceiveVoiceAssistance = basePath + "/v1/voice-assistance"
 )
 
-type voiceAssistantResponse struct {
-	AudioChunk string `json:"audioChunk"`
-}
-
 // voiceAssistantHandler handles HTTP requests for voice assistant operations.
 //
 // It bridges the HTTP layer with the core domain layer by translating incoming
@@ -40,14 +36,6 @@ func NewVoiceAssistantHandler(va ports.VoiceAssistant) *voiceAssistantHandler {
 	return &voiceAssistantHandler{
 		assistant: va,
 	}
-}
-
-type voiceAssistantRequest struct {
-	Audio []byte `json:"audio"`
-}
-
-func NewVoiceAssistant() *voiceAssistantHandler {
-	return &voiceAssistantHandler{}
 }
 
 // HandleAssist processes an uploaded audio file, runs it through the voice assistant pipeline,
