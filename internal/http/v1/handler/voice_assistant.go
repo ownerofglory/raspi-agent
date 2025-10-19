@@ -2,8 +2,6 @@ package handler
 
 import (
 	"context"
-	"encoding/base64"
-	"encoding/json"
 	"fmt"
 	"io"
 	"log/slog"
@@ -17,16 +15,27 @@ import (
 
 const (
 	filePathPattern = "/tmp/voice%s.wav"
+
+	PostReceiveVoiceAssistance = basePath + "/v1/voice-assistance"
 )
 
 type voiceAssistantResponse struct {
 	AudioChunk string `json:"audioChunk"`
 }
 
+// voiceAssistantHandler handles HTTP requests for voice assistant operations.
+//
+// It bridges the HTTP layer with the core domain layer by translating incoming
+// multipart audio uploads into domain.VoiceAssistantRequest objects and
+// streaming the resulting synthesized audio directly to the client.
 type voiceAssistantHandler struct {
 	assistant ports.VoiceAssistant
 }
 
+// NewVoiceAssistantHandler constructs a new HTTP handler for voice assistant requests.
+//
+// The handler requires a concrete implementation of the ports.VoiceAssistant interface,
+// which orchestrates transcription, completion, and TTS in the backend.
 func NewVoiceAssistantHandler(va ports.VoiceAssistant) *voiceAssistantHandler {
 	return &voiceAssistantHandler{
 		assistant: va,
@@ -41,6 +50,27 @@ func NewVoiceAssistant() *voiceAssistantHandler {
 	return &voiceAssistantHandler{}
 }
 
+// HandleAssist processes an uploaded audio file, runs it through the voice assistant pipeline,
+// and streams the resulting synthesized audio back to the client.
+//
+// Request:
+//   - Method: POST
+//   - Content-Type: multipart/form-data
+//   - Form field: "audio" (audio file)
+//
+// Response:
+//   - Content-Type: audio/mpeg
+//   - Transfer-Encoding: chunked
+//   - The connection is kept alive to stream generated audio progressively.
+//
+// Flow:
+//  1. The uploaded audio file is saved temporarily.
+//  2. It’s passed into the assistant pipeline for processing.
+//  3. The handler streams the resulting audio chunks as they become available.
+//
+// Example client usage (curl):
+//
+//	curl -X POST -F "audio=@sample.wav" http://<host>/v1/voice-assistance --output reply.mp3
 func (v *voiceAssistantHandler) HandleAssist(rw http.ResponseWriter, r *http.Request) {
 	audioFile, fh, err := r.FormFile("audio")
 	if err != nil {
@@ -59,6 +89,7 @@ func (v *voiceAssistantHandler) HandleAssist(rw http.ResponseWriter, r *http.Req
 		return
 	}
 	defer tmpFile.Close()
+	defer os.Remove(filePath)
 
 	written, err := io.Copy(tmpFile, audioFile)
 	if err != nil {
@@ -70,11 +101,13 @@ func (v *voiceAssistantHandler) HandleAssist(rw http.ResponseWriter, r *http.Req
 	if written != fh.Size {
 		slog.Warn("Audio file copy size missmatch", "size", fh.Size, "written", written)
 	}
+	// Reopen saved file for reading
+	tmpFile.Seek(0, io.SeekStart)
 
 	ctx, cancel := context.WithCancel(r.Context())
 	defer cancel()
 	resCh, err := v.assistant.Assist(ctx, &domain.VoiceAssistantRequest{
-		Audio: audioFile,
+		Audio: tmpFile,
 	})
 	if err != nil {
 		slog.Error("Unable to assist audio", "err", err)
@@ -82,45 +115,38 @@ func (v *voiceAssistantHandler) HandleAssist(rw http.ResponseWriter, r *http.Req
 		return
 	}
 
-	rw.Header().Set("Content-Type", "text/event-stream")
+	rw.Header().Set("Content-Type", "audio/mpeg")
 	rw.Header().Set("Cache-Control", "no-cache")
 	rw.Header().Set("Connection", "keep-alive")
 	rw.Header().Set("Transfer-Encoding", "chunked")
 
+	flusher, ok := rw.(http.Flusher)
+	if !ok {
+		http.Error(rw, "streaming not supported", http.StatusInternalServerError)
+		return
+	}
+
+	slog.Info("Streaming audio response to client...")
+
 	for {
-		res, ok := <-resCh
-		if !ok {
-			slog.Debug("Audio channel closed")
-			break
-		}
-
-		data, err := io.ReadAll(res.Audio)
-		if err != nil {
-			slog.Error("Unable to read audio", "err", err)
-			rw.WriteHeader(http.StatusInternalServerError)
+		select {
+		case <-ctx.Done():
+			slog.Info("Client disconnected or request canceled")
 			return
-		}
 
-		dst := make([]byte, base64.StdEncoding.EncodedLen(len(data)))
-		base64.StdEncoding.Encode(dst, data)
+		case res, ok := <-resCh:
+			if !ok {
+				slog.Info("Assistant stream completed")
+				return
+			}
 
-		voiceChunk := voiceAssistantResponse{
-			AudioChunk: string(dst),
+			// Stream the raw audio bytes directly to the client
+			_, err := io.Copy(rw, res.Audio)
+			if err != nil {
+				slog.Error("Error writing audio chunk", "err", err)
+				return
+			}
+			flusher.Flush()
 		}
-
-		chunk, err := json.Marshal(voiceChunk)
-		if err != nil {
-			slog.Error("Error marshalling chunk", "err", err)
-			rw.WriteHeader(http.StatusInternalServerError)
-			return
-		}
-
-		_, err = fmt.Fprintf(rw, "data: %v\n\n", string(chunk))
-		if err != nil {
-			slog.Error("Error writing data", "err", err)
-			rw.WriteHeader(http.StatusInternalServerError)
-			return
-		}
-		rw.(http.Flusher).Flush()
 	}
 }
