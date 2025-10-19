@@ -27,23 +27,41 @@ type TranscriptionProvider interface {
 	Transcribe(ctx context.Context, req domain.TranscribeRequest) (*domain.TranscribeResult, error)
 }
 
-// SpeechProvider defines the contract for any text-to-speech (TTS) service.
+// SpeechProvider defines the contract for any Text-to-Speech (TTS) service.
 //
-// Implementations of this interface take text input (a SpeechRequest) and produce
-// corresponding audio output as a stream of SpeechResult messages.
+// Implementations of this interface convert text input (via a SpeechRequest)
+// into an audio stream represented by a sequence of SpeechResult messages.
 //
-// The ProduceSpeech method returns a *receive-only* channel (<-chan *SpeechResult),
-// allowing the caller to consume audio chunks as they are generated — for example,
-// when using a streaming TTS engine like OpenAI Realtime API, Piper, or Coqui TTS.
+// The provider may support multiple output formats or transport methods —
+// for example, streaming audio over Server-Sent Events (SSE) or as raw
+// audio data (MPEG/WAV) suitable for direct playback.
 //
-// The context allows cancellation and timeout control during generation.
+// Both methods return a *receive-only* channel (<-chan *SpeechResult) that
+// yields audio chunks progressively as they are generated. The channel must
+// be closed when the generation process completes or fails.
+//
+// The provided context allows for cancellation and timeout control during
+// the streaming lifecycle (for example, when a user cancels playback).
 type SpeechProvider interface {
-	// ProduceSpeech converts the provided text into spoken audio.
+	// ProduceSpeechSSE generates spoken audio from text and streams it as
+	// Server-Sent Events (SSE) — suitable for clients that expect JSON-based
+	// event messages (e.g., browsers or frontend dashboards).
 	//
-	// The returned channel streams SpeechResult messages containing
-	// audio chunks or metadata as they are produced. Implementations
-	// must close the channel when generation completes or fails.
+	// Each SpeechResult contains a base64-encoded audio chunk or other event
+	// payload. The channel is closed when the stream completes or fails.
 	//
-	// The context controls cancellation and timeout of the generation process.
-	ProduceSpeech(ctx context.Context, req *domain.SpeechRequest) (<-chan *domain.SpeechResult, error)
+	// Use this method when your transport layer requires SSE (text/event-stream).
+	ProduceSpeechSSE(ctx context.Context, req *domain.SpeechRequest) (<-chan *domain.SpeechResult, error)
+
+	// ProduceSpeechAudio generates spoken audio from text and streams it
+	// as raw binary audio chunks — for example, MPEG or WAV data that can
+	// be piped directly into a speaker or audio playback process.
+	//
+	// Each SpeechResult contains an io.Reader providing a portion of the
+	// audio output. The caller is responsible for sequentially reading and
+	// combining the chunks for continuous playback.
+	//
+	// Use this method when working with direct audio playback pipelines,
+	// such as Raspberry Pi speakers or hardware audio devices.
+	ProduceSpeechAudio(ctx context.Context, req *domain.SpeechRequest) (<-chan *domain.SpeechResult, error)
 }
