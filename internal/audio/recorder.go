@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/gordonklaus/portaudio"
+	"github.com/ownerofglory/raspi-agent/internal/core/domain"
 )
 
 // WAV format constants define the structure and encoding
@@ -97,7 +98,7 @@ func (r *recordingResult) SaveTo(f io.Writer) error {
 }
 
 // RecordAudio captures audio for a specified duration
-func (r *recorder) RecordAudio(ctx context.Context, duration time.Duration) (*recordingResult, error) {
+func (r *recorder) RecordAudio(ctx context.Context, duration time.Duration) (domain.RecordingResult, error) {
 	if err := portaudio.Initialize(); err != nil {
 		slog.Error("Unable to initialize portaudio", "err", err)
 		return nil, fmt.Errorf("unable to initialize portaudio: %v", err)
