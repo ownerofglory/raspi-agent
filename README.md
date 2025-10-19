@@ -1,4 +1,4 @@
-# Raspi agent (poor man's Alexa)
+# Raspi agent (DIY voice assistance)
 **Raspi-Agent** is a modular, streaming voice assistant built for Raspberry Pi.  
 It listens for a wake word, records your voice, processes the audio using OpenAI or a backend service,  
 and responds with natural speech — all in real time.
