@@ -11,12 +11,14 @@ LDFLAGS       := -X 'github.com/ownerofglory/raspi-agent/internal/http/handler.A
 # --- Directories ---
 CMD_DIR_BE    := $(shell pwd)/cmd/raspi-agent-backend
 CMD_DIR_ONB   := $(shell pwd)/cmd/raspi-agent-onboard
+CMD_DIR_ONB_LOCAL   := $(shell pwd)/cmd/raspi-agent-onboard-local
 BIN_DIR       := $(shell pwd)/bin
 RELEASE_DIR   := $(shell pwd)/release
 
 # --- Targets ---
 TARGET_NAME_BE  := raspi-agent-backend
 TARGET_NAME_ONB := raspi-agent-onboard
+TARGET_NAME_ONB_LOCAL := raspi-agent-onboard-local
 
 # --- Build Config ---
 TARGET_OS_BE    := $(shell go env GOOS)
@@ -28,7 +30,7 @@ TARGET_ARCH_ONB := arm64
 # Build Targets
 # ============================================
 
-all: build-backend build-onboard
+all: build-backend build-onboard build-onboard-local
 
 build-backend: fmt
 	@echo "Building backend for OS=$(TARGET_OS_BE) Arch=$(TARGET_ARCH_BE)"
@@ -45,6 +47,14 @@ build-onboard: fmt
 	go mod tidy
 	GOOS=$(TARGET_OS_ONB) GOARCH=$(TARGET_ARCH_ONB) \
 	go build -o $(BIN_DIR)/$(TARGET_NAME_ONB) $(CMD_DIR_ONB)/main.go
+
+build-onboard-local: fmt
+	@echo "Building local onboard for OS=$(TARGET_OS_ONB) Arch=$(TARGET_ARCH_ONB)"
+	@echo "Version: $(VERSION_TAG)-$(VERSION)"
+	@mkdir -p $(BIN_DIR)
+	go mod tidy
+	GOOS=$(TARGET_OS_ONB) GOARCH=$(TARGET_ARCH_ONB) \
+	go build -o $(BIN_DIR)/$(TARGET_NAME_ONB_LOCAL) $(CMD_DIR_ONB_LOCAL)/main.go
 
 # ============================================
 # Dev / Test / Utility
