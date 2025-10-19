@@ -12,14 +12,18 @@ import (
 )
 
 type onboardOrchestrator struct {
-	listener ports.WakeListener
-	recorder ports.Recorder
+	listener       ports.WakeListener
+	recorder       ports.Recorder
+	player         ports.Player
+	voiceAssistant ports.VoiceAssistantClient
 }
 
-func NewOnboardOrchestrator(listener ports.WakeListener, recorder ports.Recorder) *onboardOrchestrator {
+func NewOnboardOrchestrator(listener ports.WakeListener, recorder ports.Recorder, player ports.Player, voiceAssistant ports.VoiceAssistantClient) *onboardOrchestrator {
 	return &onboardOrchestrator{
-		listener: listener,
-		recorder: recorder,
+		listener:       listener,
+		recorder:       recorder,
+		player:         player,
+		voiceAssistant: voiceAssistant,
 	}
 }
 
@@ -73,7 +77,7 @@ func (o *onboardOrchestrator) Run(ctx context.Context) error {
 		}
 	}()
 
-	// request backend
+	// request backend and play
 	go func() {
 		for {
 			select {
@@ -84,7 +88,17 @@ func (o *onboardOrchestrator) Run(ctx context.Context) error {
 					return
 				}
 
-				_ = filePath
+				assistance, err := o.voiceAssistant.ReceiveVoiceAssistance(ctx, filePath)
+				if err != nil {
+					slog.Error("Unable to receive voice", "error", err)
+					return
+				}
+
+				err = o.player.PlaybackStream(ctx, assistance)
+				if err != nil {
+					slog.Error("Unable to playback", "error", err)
+					return
+				}
 			}
 		}
 	}()
@@ -111,6 +125,7 @@ func (o *onboardOrchestrator) recordUponWake(ctx context.Context, resCh chan<- d
 					return
 				}
 
+				slog.Debug("Wake word detected")
 				wakeCh <- nil
 			}()
 
