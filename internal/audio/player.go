@@ -152,6 +152,100 @@ func (p *portAudioPlayer) PlaybackStream(ctx context.Context, audioStream <-chan
 	}
 }
 
+func (p *portAudioPlayer) Playback(ctx context.Context, reader io.Reader) error {
+	if err := portaudio.Initialize(); err != nil {
+		slog.Error("Error initializing portaudio")
+		return fmt.Errorf("portaudio initialize failed: %w", err)
+	}
+	defer portaudio.Terminate()
+
+	devices, err := portaudio.Devices()
+	if err != nil {
+		return fmt.Errorf("list devices: %w", err)
+	}
+
+	var output *portaudio.DeviceInfo
+	for _, d := range devices {
+		name := strings.ToLower(d.Name)
+		if strings.Contains(name, "pulse") || strings.Contains(name, "pipewire") {
+			output = d
+			break
+		}
+	}
+	if output == nil {
+		return fmt.Errorf("no pulse/pipewire output device found")
+	}
+
+	// Initialize decoder directly from reader
+	decoder, err := minimp3.NewDecoder(reader)
+	if err != nil {
+		return fmt.Errorf("failed to create mp3 decoder: %w", err)
+	}
+	defer decoder.Close()
+
+	<-decoder.Started()
+	slog.Info("MP3 decoder started", "rate", decoder.SampleRate, "channels", decoder.Channels)
+
+	channels := decoder.Channels
+	if channels == 0 {
+		channels = 2
+	}
+
+	buf := make([]int16, 512*channels)
+	stream, err := portaudio.OpenStream(portaudio.StreamParameters{
+		Output: portaudio.StreamDeviceParameters{
+			Device:   output,
+			Channels: channels,
+			Latency:  output.DefaultLowOutputLatency,
+		},
+		SampleRate:      float64(decoder.SampleRate),
+		FramesPerBuffer: len(buf) / channels,
+	}, &buf)
+	if err != nil {
+		return fmt.Errorf("failed to open audio stream: %w", err)
+	}
+	defer stream.Close()
+
+	if err := stream.Start(); err != nil {
+		return fmt.Errorf("failed to start stream: %w", err)
+	}
+	defer stream.Stop()
+
+	slog.Info("🎧 Playing MP3 via PortAudio", "device", output.Name)
+
+	pcmBuf := make([]byte, 4096)
+	for {
+		select {
+		case <-ctx.Done():
+			slog.Info("Playback canceled")
+			return nil
+		default:
+			n, err := decoder.Read(pcmBuf)
+			if n > 0 {
+				samples := bytesToInt16(pcmBuf[:n])
+				for len(samples) > 0 {
+					copied := copy(buf, samples)
+					samples = samples[copied:]
+					if err := stream.Write(); err != nil {
+						if strings.Contains(err.Error(), "underflow") {
+							slog.Warn("Output underflow")
+							continue
+						}
+						return fmt.Errorf("stream write failed: %w", err)
+					}
+				}
+			}
+			if err != nil {
+				if err == io.EOF {
+					slog.Info("Playback finished")
+					return nil
+				}
+				return fmt.Errorf("decoder read failed: %w", err)
+			}
+		}
+	}
+}
+
 // helper to interpret little-endian bytes as int16 samples
 func bytesToInt16(data []byte) []int16 {
 	n := len(data) / 2

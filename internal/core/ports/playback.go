@@ -1,6 +1,9 @@
 package ports
 
-import "context"
+import (
+	"context"
+	"io"
+)
 
 // Player defines the contract for any audio playback implementation.
 //
@@ -31,4 +34,10 @@ type Player interface {
 	// The context allows cancellation of playback (for example, if the
 	// user stops the assistant or starts a new request).
 	PlaybackStream(ctx context.Context, audioStream <-chan []byte) error
+
+	// Playback plays audio from a single continuous reader (e.g. file, HTTP body).
+	//
+	// Unlike PlaybackStream, this variant does not require chunked input.
+	// Implementations should decode and stream playback until EOF or cancellation.
+	Playback(ctx context.Context, reader io.Reader) error
 }
