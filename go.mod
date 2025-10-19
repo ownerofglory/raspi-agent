@@ -10,6 +10,7 @@ require (
 	github.com/openai/openai-go/v3 v3.4.0
 	github.com/sigidagi/porcupine/binding/go/v2 v2.0.0-20230817112915-3673a02d4426
 	github.com/tmaxmax/go-sse v0.11.0
+	github.com/tosone/minimp3 v1.0.2
 )
 
 require (
