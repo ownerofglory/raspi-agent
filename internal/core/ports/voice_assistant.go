@@ -34,3 +34,33 @@ type VoiceAssistant interface {
 	// The context controls cancellation and timeout behavior.
 	Assist(ctx context.Context, req *domain.VoiceAssistantRequest) (<-chan *domain.VoiceAssistantResult, error)
 }
+
+// VoiceAssistantClient defines the contract for a client capable of sending
+// recorded user audio to a backend voice assistant service and receiving
+// a streamed audio reply.
+//
+// The backend is typically an HTTP or WebSocket endpoint that accepts
+// an audio file (e.g., WAV or MP3) and returns a streaming audio response
+// (for example, an `audio/mpeg` chunked transfer).
+//
+// The ReceiveVoiceAssistance method uploads the user's voice recording
+// to the backend and returns a *receive-only* channel of []byte chunks,
+// each containing a portion of the assistant's spoken response.
+//
+// Example:
+//
+//	ch, err := client.ReceiveVoiceAssistance(ctx, "/tmp/request.wav")
+//	if err != nil {
+//	    log.Fatal(err)
+//	}
+//
+//	// Stream response to speaker
+//	player.PlaybackStream(ctx, ch)
+type VoiceAssistantClient interface {
+	// ReceiveVoiceAssistance sends a voice request to the backend and
+	// returns a stream of audio chunks representing the assistant's reply.
+	//
+	// The returned channel will be closed automatically when the stream ends
+	// or if the context is canceled.
+	ReceiveVoiceAssistance(ctx context.Context, filePath string) (<-chan []byte, error)
+}
