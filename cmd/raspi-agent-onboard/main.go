@@ -10,7 +10,7 @@ import (
 
 	"github.com/ownerofglory/raspi-agent/internal/audio"
 	"github.com/ownerofglory/raspi-agent/internal/http/v1/client"
-	"github.com/ownerofglory/raspi-agent/internal/orchestrator"
+	"github.com/ownerofglory/raspi-agent/internal/offboard"
 	"github.com/ownerofglory/raspi-agent/internal/wakeword"
 )
 
@@ -37,7 +37,7 @@ func main() {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	orch := orchestrator.NewOnboardOrchestrator(listener, recorder, player, assistant)
+	orch := offboard.NewOrchestrator(listener, recorder, player, assistant)
 	go func() {
 		err := orch.Run(ctx)
 		if err != nil {

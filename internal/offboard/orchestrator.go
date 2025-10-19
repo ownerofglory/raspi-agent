@@ -1,4 +1,4 @@
-package orchestrator
+package offboard
 
 import (
 	"context"
@@ -11,15 +11,15 @@ import (
 	"github.com/ownerofglory/raspi-agent/internal/core/ports"
 )
 
-type onboardOrchestrator struct {
+type offboardOrchestrator struct {
 	listener       ports.WakeListener
 	recorder       ports.Recorder
 	player         ports.Player
 	voiceAssistant ports.VoiceAssistantClient
 }
 
-func NewOnboardOrchestrator(listener ports.WakeListener, recorder ports.Recorder, player ports.Player, voiceAssistant ports.VoiceAssistantClient) *onboardOrchestrator {
-	return &onboardOrchestrator{
+func NewOrchestrator(listener ports.WakeListener, recorder ports.Recorder, player ports.Player, voiceAssistant ports.VoiceAssistantClient) *offboardOrchestrator {
+	return &offboardOrchestrator{
 		listener:       listener,
 		recorder:       recorder,
 		player:         player,
@@ -27,7 +27,7 @@ func NewOnboardOrchestrator(listener ports.WakeListener, recorder ports.Recorder
 	}
 }
 
-func (o *onboardOrchestrator) Run(ctx context.Context) error {
+func (o *offboardOrchestrator) Run(ctx context.Context) error {
 	ctxWithCancel, cancel := context.WithCancel(ctx)
 
 	recordCh := make(chan domain.RecordingResult)
@@ -107,7 +107,7 @@ func (o *onboardOrchestrator) Run(ctx context.Context) error {
 	return nil
 }
 
-func (o *onboardOrchestrator) recordUponWake(ctx context.Context, resCh chan<- domain.RecordingResult) error {
+func (o *offboardOrchestrator) recordUponWake(ctx context.Context, resCh chan<- domain.RecordingResult) error {
 	wakeCh := make(chan error)
 	defer close(wakeCh)
 
