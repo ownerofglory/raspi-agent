@@ -32,7 +32,11 @@ func NewCompletionClient(client *openai.Client) *completionClient {
 // It currently uses the GPT-4o-mini model for efficiency but can be
 // parameterized or made configurable in future versions.
 func (c *completionClient) CreateCompletion(ctx context.Context, req *domain.CompletionRequest) (*domain.CompletionResult, error) {
-	messages := make([]openai.ChatCompletionMessageParamUnion, 2)
+	messages := make([]openai.ChatCompletionMessageParamUnion, 0)
+
+	systemMessage := openai.SystemMessage("You are an AI agent named Vicky")
+	messages = append(messages, systemMessage)
+
 	userContent := openai.TextContentPart(req.Prompt)
 	userMessage := openai.UserMessage([]openai.ChatCompletionContentPartUnionParam{
 		userContent,
