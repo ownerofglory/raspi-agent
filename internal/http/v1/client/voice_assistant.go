@@ -19,6 +19,7 @@ type voiceAssistant struct {
 
 func NewVoiceAssistant(baseURL string) *voiceAssistant {
 	return &voiceAssistant{
+		baseURL: baseURL,
 		client: &http.Client{
 			Timeout: 0,
 		},
