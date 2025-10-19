@@ -35,7 +35,7 @@ func NewPorcupineListener(accessKey, modelPath, libraryPath, keywordPath string)
 		ModelPath:   modelPath,
 		LibraryPath: libraryPath,
 		KeywordPaths: []string{
-			libraryPath,
+			keywordPath,
 		},
 	}
 	return &porcupineListener{
