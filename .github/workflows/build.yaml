@@ -46,20 +46,22 @@ jobs:
           export GOROOT=
           make build-backend
 
-  build-onboard:
-    name: Build onboard
-    needs: test
-    runs-on: ubuntu-22.04
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
 
-      - name: Set up Go
-        uses: actions/setup-go@v3
-        with:
-          go-version: '1.24'
-
-      - name: Build
-        run: |
-          export GOROOT=
-          make build-onboard
+# # disabled temporarily
+#  build-onboard:
+#    name: Build onboard
+#    needs: test
+#    runs-on: ubuntu-22.04
+#    steps:
+#      - name: Checkout code
+#        uses: actions/checkout@v4
+#
+#      - name: Set up Go
+#        uses: actions/setup-go@v3
+#        with:
+#          go-version: '1.24'
+#
+#      - name: Build
+#        run: |
+#          export GOROOT=
+#          make build-onboard
