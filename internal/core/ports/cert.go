@@ -1,6 +1,10 @@
 package ports
 
-import "github.com/ownerofglory/raspi-agent/internal/core/domain"
+import (
+	"context"
+
+	"github.com/ownerofglory/raspi-agent/internal/core/domain"
+)
 
 // EnrollmentHandler defines the contract for any component capable
 // of handling certificate enrollment for devices.
@@ -20,5 +24,5 @@ type EnrollmentHandler interface {
 	//
 	// It should return an error if the signing process fails or if the
 	// enrollment request is invalid or unauthorized.
-	Enroll(req *domain.CertEnrollRequest) (*domain.CertSignResult, error)
+	Enroll(ctx context.Context, req *domain.CertEnrollRequest) (*domain.CertSignResult, error)
 }
