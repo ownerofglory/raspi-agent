@@ -2,7 +2,7 @@ package ports
 
 import "github.com/ownerofglory/raspi-agent/internal/core/domain"
 
-// DeviceEnrollmentHandler defines the contract for any component capable
+// EnrollmentHandler defines the contract for any component capable
 // of handling certificate enrollment for devices.
 //
 // The Enroll method receives a certificate signing request (CSR) from a device,
@@ -11,7 +11,7 @@ import "github.com/ownerofglory/raspi-agent/internal/core/domain"
 //
 // Implementations should validate and authenticate enrollment requests
 // to ensure that only authorized devices are able to obtain certificates.
-type DeviceEnrollmentHandler interface {
+type EnrollmentHandler interface {
 	// Enroll handles the certificate enrollment process for a device.
 	//
 	// req contains the CSR to be signed.
