@@ -16,7 +16,7 @@ import (
 // Implementations should validate and authenticate enrollment requests
 // to ensure that only authorized devices are able to obtain certificates.
 type EnrollmentHandler interface {
-	// Enroll handles the certificate enrollment process for a device.
+	// Sign handles the certificate enrollment process for a device.
 	//
 	// req contains the CSR to be signed.
 	// The method should return a CertSignResult containing the signed
@@ -24,5 +24,5 @@ type EnrollmentHandler interface {
 	//
 	// It should return an error if the signing process fails or if the
 	// enrollment request is invalid or unauthorized.
-	Enroll(ctx context.Context, req *domain.CertEnrollRequest) (*domain.CertSignResult, error)
+	Sign(ctx context.Context, req *domain.CertEnrollRequest) (*domain.CertSignResult, error)
 }
