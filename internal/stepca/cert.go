@@ -61,9 +61,14 @@ type stepCASignResponse struct {
 }
 
 func (e *enrollProvider) Sign(ctx context.Context, req *domain.CertEnrollRequest) (*domain.CertSignResult, error) {
+	ott, err := e.generateOTT("device-raspi-123")
+	if err != nil {
+		slog.Error("Failed to generate OTT", "err", err)
+		return nil, fmt.Errorf("failed to generate OTT: %w", err)
+	}
 	signReq := map[string]string{
 		"csr": req.CSR,
-		"ott": e.provisionerToken,
+		"ott": ott,
 	}
 
 	body, err := json.Marshal(signReq)
@@ -79,7 +84,6 @@ func (e *enrollProvider) Sign(ctx context.Context, req *domain.CertEnrollRequest
 		return nil, fmt.Errorf("enroll enroll: failed to create http request: %w", err)
 	}
 	httpReq.Header.Set("Content-Type", "application/json")
-	httpReq.Header.Set("Authorization", "Bearer "+e.provisionerToken)
 
 	resp, err := e.client.Do(httpReq)
 	if err != nil {
@@ -146,7 +150,7 @@ func (e *enrollProvider) generateOTT(deviceCN string) (string, error) {
 			Issuer:    e.provisionerName,
 			NotBefore: jose.NewNumericDate(now),
 			Expiry:    jose.NewNumericDate(now.Add(time.Minute)),
-			Audience:  []string{e.stepCAURL},
+			Audience:  []string{e.stepCAURL + "/sign"},
 		},
 		SANS: []string{deviceCN},
 	}
