@@ -24,5 +24,5 @@ type EnrollmentHandler interface {
 	//
 	// It should return an error if the signing process fails or if the
 	// enrollment request is invalid or unauthorized.
-	Sign(ctx context.Context, req *domain.CertEnrollRequest) (*domain.CertSignResult, error)
+	Sign(ctx context.Context, req *domain.CertSignRequest) (*domain.CertSignResult, error)
 }

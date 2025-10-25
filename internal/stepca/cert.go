@@ -60,7 +60,7 @@ type stepCASignResponse struct {
 	} `json:"tlsOptions,omitempty"`
 }
 
-func (e *enrollProvider) Sign(ctx context.Context, req *domain.CertEnrollRequest) (*domain.CertSignResult, error) {
+func (e *enrollProvider) Sign(ctx context.Context, req *domain.CertSignRequest) (*domain.CertSignResult, error) {
 	ott, err := e.generateOTT("device-raspi-123")
 	if err != nil {
 		slog.Error("Failed to generate OTT", "err", err)

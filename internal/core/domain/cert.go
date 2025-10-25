@@ -1,9 +1,9 @@
 package domain
 
-// CertEnrollRequest represents a certificate enrollment request
+// CertSignRequest represents a certificate enrollment request
 // coming from a device or client. The CSR field should contain
 // a base64-encoded PEM CSR (Certificate Signing Request).
-type CertEnrollRequest struct {
+type CertSignRequest struct {
 	// CSR is the base64-encoded PEM-encoded CSR to be signed.
 	CSR string
 }
