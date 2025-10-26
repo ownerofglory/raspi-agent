@@ -9,13 +9,11 @@ package domain
 // later be used by the device during certificate enrollment.
 //
 // Fields:
-//   - DeviceID: Identifier of the device
 //   - UserID: Identifier of the user who owns this device.
 //   - Name:   Human-friendly name for the device (for UI display).
 type DeviceRegistration struct {
-	DeviceID string
-	UserID   string
-	Name     string
+	UserID string
+	Name   string
 }
 
 // DeviceRegistrationResult is returned by the backend when a
