@@ -20,9 +20,9 @@ import (
 
 const backendBasePath = "/raspi-agent/management/api"
 
-// PostEnrollDeviceURL defines the backend API path for device enrollment.
+// postEnrollDeviceURL defines the backend API path for device enrollment.
 // The placeholder {deviceId} is replaced with the actual device identifier.
-const PostEnrollDeviceURL string = backendBasePath + "/v1/device/{deviceId}/enroll"
+const postEnrollDeviceURL string = backendBasePath + "/v1/users/{userId}/devices/{deviceId}/enroll"
 
 // Default subject information for generated CSRs.
 // These values are embedded into the certificate subject (DN).
@@ -50,10 +50,8 @@ type deviceEnrollClient struct {
 
 // deviceEnrollRequest represents the JSON payload sent to the backend during enrollment.
 type deviceEnrollRequest struct {
-	CSR      string `json:"csr"`
-	DeviceID string `json:"deviceId"`
-	OTP      string `json:"otp"`
-	UserID   string `json:"userId"`
+	CSR string `json:"csr"`
+	OTP string `json:"otp"`
 }
 
 // deviceEnrollResponse represents the expected JSON response
@@ -91,10 +89,8 @@ func (d *deviceEnrollClient) Enroll(deviceID, userID, otp string) (*domain.Devic
 	}
 
 	reqBody := deviceEnrollRequest{
-		DeviceID: deviceID,
-		OTP:      otp,
-		UserID:   userID,
-		CSR:      string(deviceCSR),
+		OTP: otp,
+		CSR: string(deviceCSR),
 	}
 
 	reqPayload, err := json.Marshal(reqBody)
@@ -102,7 +98,8 @@ func (d *deviceEnrollClient) Enroll(deviceID, userID, otp string) (*domain.Devic
 		return nil, fmt.Errorf("enroll device csr: %w", err)
 	}
 
-	path := strings.Replace(PostEnrollDeviceURL, "{deviceId}", deviceID, 1)
+	path := strings.Replace(postEnrollDeviceURL, "{deviceId}", deviceID, 1)
+	path = strings.Replace(path, "{userId}", userID, 1)
 	url := fmt.Sprintf("%s%s", d.baseURL, path)
 
 	request, err := http.NewRequest(http.MethodPost, url, bytes.NewBuffer(reqPayload))
