@@ -9,11 +9,13 @@ package domain
 // later be used by the device during certificate enrollment.
 //
 // Fields:
+//   - DeviceID: Identifier of the device
 //   - UserID: Identifier of the user who owns this device.
 //   - Name:   Human-friendly name for the device (for UI display).
 type DeviceRegistration struct {
-	UserID string
-	Name   string
+	DeviceID string
+	UserID   string
+	Name     string
 }
 
 // DeviceRegistrationResult is returned by the backend when a
@@ -67,4 +69,43 @@ type DeviceEnrollment struct {
 //   - CertSign: The signed certificate and chain details.
 type DeviceEnrollmentResult struct {
 	CertSign *CertSignResult
+}
+
+// DeviceEnrollmentState represents the current status of a device
+// in the enrollment lifecycle. It indicates whether a device is newly
+// created, successfully enrolled with a certificate, or disabled.
+type DeviceEnrollmentState string
+
+const (
+	// DeviceEnrollmentStateEnrolled means the device has successfully
+	// completed enrollment and holds a valid client certificate.
+	DeviceEnrollmentStateEnrolled DeviceEnrollmentState = "enrolled"
+
+	// DeviceEnrollmentStateCreated means the device record exists
+	// (e.g., registered by a user) but has not yet completed the
+	// certificate enrollment process.
+	DeviceEnrollmentStateCreated DeviceEnrollmentState = "created"
+
+	// DeviceEnrollmentStateDisabled means the device has been explicitly
+	// disabled or revoked and can no longer authenticate with the system.
+	DeviceEnrollmentStateDisabled DeviceEnrollmentState = "disabled"
+)
+
+// Device represents a registered hardware or software client (e.g., a Raspberry Pi).
+// It is uniquely identified and associated with a user account. Devices are enrolled
+// by generating a CSR and receiving a signed certificate from the backend.
+type Device struct {
+	// ID is the unique identifier of the device (e.g., UUID or serial number).
+	ID *string
+
+	// UserID associates the device with a user or account that owns it.
+	UserID *string
+
+	// OTP is an optional one-time passcode issued during device registration.
+	// It is used to authenticate the device during its first enrollment.
+	OTP *string
+
+	// EnrollmentStatus represents the device’s current lifecycle state.
+	// It indicates whether the device is registered, enrolled, or disabled.
+	EnrollmentStatus DeviceEnrollmentState
 }

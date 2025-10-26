@@ -50,3 +50,32 @@ type DeviceService interface {
 	//   - Error if OTP validation or signing fails
 	EnrollDevice(ctx context.Context, enr domain.DeviceEnrollment) (*domain.DeviceEnrollmentResult, error)
 }
+
+// DeviceRepo defines the data access layer for device records.
+// It abstracts persistence logic (e.g., database, in-memory, or remote store)
+// from higher-level business logic in the service layer.
+//
+// Implementations of this interface should be responsible for creating,
+// updating, retrieving, and deleting device entities in the storage backend.
+type DeviceRepo interface {
+	// Save persists a new device record in the repository.
+	// It should return the created device (including its generated ID, if any).
+	Save(ctx context.Context, device domain.Device) (*domain.Device, error)
+
+	// Update modifies an existing device record.
+	// Returns the updated device instance or an error if not found.
+	Update(ctx context.Context, device domain.Device) (*domain.Device, error)
+
+	// Find retrieves a single device by its unique identifier.
+	// Returns nil if no matching device is found.
+	Find(ctx context.Context, id string) (*domain.Device, error)
+
+	// Remove deletes a device from the repository by its ID.
+	// It should be idempotent — calling Remove on a non-existent ID
+	// should not cause an error.
+	Remove(ctx context.Context, id string) error
+
+	// FindByUserID returns all devices associated with a given user.
+	// The slice may be empty if the user has no registered devices.
+	FindByUserID(ctx context.Context, userId string) ([]domain.Device, error)
+}
