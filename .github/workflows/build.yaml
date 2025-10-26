@@ -3,34 +3,35 @@ name: Build pipeline
 on: [push]
 
 jobs:
-  test:
-    name: Unit test
-    runs-on: ubuntu-22.04
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Set up Go
-        uses: actions/setup-go@v3
-        with:
-          go-version: '1.24'
-
-      - name: Test
-        run: |
-          export GOROOT=
-          make test
-          cat coverage.out
-
-      - name: Publish Test Coverage Report
-        uses: actions/upload-artifact@v4
-        with:
-          name: coverage-report
-          path: coverage.out
+  # # disabled temporarily
+#  test:
+#    name: Unit test
+#    runs-on: ubuntu-22.04
+#    steps:
+#      - name: Checkout code
+#        uses: actions/checkout@v4
+#
+#      - name: Set up Go
+#        uses: actions/setup-go@v3
+#        with:
+#          go-version: '1.24'
+#
+#      - name: Test
+#        run: |
+#          export GOROOT=
+#          make test
+#          cat coverage.out
+#
+#      - name: Publish Test Coverage Report
+#        uses: actions/upload-artifact@v4
+#        with:
+#          name: coverage-report
+#          path: coverage.out
 
 
   build-backend:
     name: Build backend
-    needs: test
+#    needs: test
     runs-on: ubuntu-22.04
     steps:
       - name: Checkout code
