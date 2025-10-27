@@ -6,12 +6,14 @@ require (
 	github.com/caarlos0/env/v11 v11.3.1
 	github.com/go-chi/chi/v5 v5.2.3
 	github.com/go-chi/httplog/v2 v2.1.1
+	github.com/google/uuid v1.6.0
 	github.com/gordonklaus/portaudio v0.0.0-20250206071425-98a94950218b
 	github.com/openai/openai-go/v3 v3.4.0
 	github.com/sigidagi/porcupine/binding/go/v2 v2.0.0-20230817112915-3673a02d4426
 	github.com/tmaxmax/go-sse v0.11.0
 	github.com/tosone/minimp3 v1.0.2
 	go.step.sm/crypto v0.72.0
+	gorm.io/gorm v1.31.0
 )
 
 require (
@@ -24,7 +26,8 @@ require (
 	github.com/go-faster/yaml v0.4.6 // indirect
 	github.com/go-jose/go-jose/v3 v3.0.4 // indirect
 	github.com/google/go-cmp v0.7.0 // indirect
-	github.com/google/uuid v1.6.0 // indirect
+	github.com/jinzhu/inflection v1.0.0 // indirect
+	github.com/jinzhu/now v1.1.5 // indirect
 	github.com/mattn/go-colorable v0.1.13 // indirect
 	github.com/mattn/go-isatty v0.0.20 // indirect
 	github.com/ogen-go/ogen v1.16.0 // indirect
