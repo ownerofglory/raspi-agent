@@ -23,3 +23,12 @@ type CompletionProvider interface {
 	//   - An error if the generation process fails or the request is invalid.
 	CreateCompletion(ctx context.Context, req *domain.CompletionRequest) (*domain.CompletionResult, error)
 }
+
+// SummaryProvider defines the interface for generating summaries of text or conversations.
+// Implementations of this interface produce concise summaries based on a series of input messages.
+type SummaryProvider interface {
+	// CreateSummary generates a summary for the provided conversation or text input.
+	// It takes a context for cancellation and timeout control, along with a summary request
+	// containing the messages to summarize. It returns the generated summary result or an error.
+	CreateSummary(ctx context.Context, req *domain.SummaryRequest) (*domain.SummaryResult, error)
+}
