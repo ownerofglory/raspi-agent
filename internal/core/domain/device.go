@@ -103,6 +103,9 @@ type Device struct {
 	// It is used to authenticate the device during its first enrollment.
 	OTP *string
 
+	// Name name of the device
+	Name string
+
 	// EnrollmentStatus represents the device’s current lifecycle state.
 	// It indicates whether the device is registered, enrolled, or disabled.
 	EnrollmentStatus DeviceEnrollmentState
