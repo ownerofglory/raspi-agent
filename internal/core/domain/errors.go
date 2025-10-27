@@ -10,5 +10,5 @@ var (
 
 // Device domain errors
 var (
-	DeviceNotFound = errors.New("device not found")
+	ErrDeviceNotFound = errors.New("device not found")
 )
