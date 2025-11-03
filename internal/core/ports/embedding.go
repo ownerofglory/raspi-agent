@@ -14,5 +14,5 @@ type EmbeddingProvider interface {
 	// CreateEmbedding generates an embedding vector for the provided input text.
 	// The method takes a context for cancellation and a request specifying
 	// the input data, and returns the computed embedding result or an error.
-	CreateEmbedding(ctx context.Context, req domain.EmbeddingRequest) (domain.EmbeddingResult, error)
+	CreateEmbedding(ctx context.Context, req domain.EmbeddingRequest) (*domain.EmbeddingResult, error)
 }
