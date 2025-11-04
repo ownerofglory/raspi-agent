@@ -1,13 +1,18 @@
 # Raspi agent (DIY voice assistance)
-**Raspi-Agent** is a modular, streaming voice assistant built for Raspberry Pi.  
-It listens for a wake word, records your voice, processes the audio using OpenAI or a backend service,  
-and responds with natural speech — all in real time.
-
+**Raspi-Agent** is a modular streaming voice assistant for Raspberry Pi with built-in wake-word detection, streaming audio, and LLM back-end support (on-device or off-device)
 
 
 ![](https://github.com/ownerofglory/raspi-agent/actions/workflows/build.yaml/badge.svg)
 
-*In development ...*
+### *Currently, in development ...*
+
+## Planned Features
+- [x] Wake word detection
+- [x] Streaming audio playback
+- [x] Natural conversation via OpenAI APIs
+- [ ] RAG integration
+- [ ] Agent memory
+- [ ] Web dashboard
 
 <img src="./docs/assets/Raspi-agent.png" width="480px" />
 
