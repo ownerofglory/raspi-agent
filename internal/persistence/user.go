@@ -72,6 +72,34 @@ func (u *userRepo) FindByEmail(ctx context.Context, email string) (domain.User, 
 	return user, nil
 }
 
+// Save persists a new or existing user to the repository.
+func (u *userRepo) Save(ctx context.Context, user domain.User) (*domain.User, error) {
+	e := createUserEntity(user)
+
+	result := gorm.WithResult()
+	err := gorm.G[entity.User](u.db, result).Create(ctx, e)
+	if err != nil {
+		if errors.Is(err, gorm.ErrDuplicatedKey) {
+			return nil, fmt.Errorf("user with id %v already exists: %w", user.ID(), domain.UserAlreadyExists)
+		}
+		slog.Error("unable to save user", "err", err)
+		return nil, err
+	}
+
+	savedUser, err := createDomainUser(e)
+	if err != nil {
+		slog.Error("unable to convert persisted user", "err", err)
+		return nil, err
+	}
+
+	return &savedUser, nil
+}
+
+// Delete permanently removes a user by ID.
+func (u *userRepo) Delete(ctx context.Context, id string) error {
+	return fmt.Errorf("not implemented")
+}
+
 // createUserEntity converts a domain.User into a persistence entity.User.
 func createUserEntity(user domain.User) *entity.User {
 	return &entity.User{

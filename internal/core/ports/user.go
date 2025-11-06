@@ -38,7 +38,7 @@ type UserRepo interface {
 
 	// Save persists a new or existing user to the repository.
 	// Implementations should handle insert vs. update logic internally.
-	Save(ctx context.Context, user domain.User) error
+	Save(ctx context.Context, user domain.User) (*domain.User, error)
 
 	// Delete permanently removes a user by ID.
 	// Depending on business rules, this may perform a soft-delete instead.
