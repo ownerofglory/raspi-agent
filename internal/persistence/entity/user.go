@@ -7,12 +7,12 @@ import (
 
 // User represents a row in the `users` table
 type User struct {
-	ID           uuid.UUID `gorm:"type:uuid;not null;primaryKey" json:"id"`
-	FirstName    string    `gorm:"type:varchar(256);default:''" json:"first_name"`
-	LastName     string    `gorm:"type:varchar(256);default:''" json:"last_name"`
-	Email        string    `gorm:"type:varchar(256);not null;uniqueIndex" json:"email"`
+	ID           uuid.UUID `gorm:"type:uuid;not null;primaryKey"`
+	FirstName    string    `gorm:"type:varchar(256);default:''"`
+	LastName     string    `gorm:"type:varchar(256);default:''"`
+	Email        string    `gorm:"type:varchar(256);not null;uniqueIndex"`
 	PasswordHash *string   `gorm:"type:text;" json:"-"`
-	Provider     string    `gorm:"type:varchar(64);default:'local'" json:"provider"`
+	Provider     string    `gorm:"type:varchar(64);default:'local'"`
 }
 
 // BeforeCreate hook to auto-generate UUIDs
