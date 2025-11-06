@@ -11,6 +11,7 @@
 - [x] Streaming audio playback
 - [x] Natural conversation via OpenAI APIs
 - [x] Device registration and certificate enrollment
+- [ ] Device-to-backend communication over mTLS
 - [ ] RAG integration
 - [ ] Agent memory
 - [ ] Web dashboard
