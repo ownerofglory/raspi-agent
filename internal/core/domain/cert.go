@@ -6,6 +6,9 @@ package domain
 type CertSignRequest struct {
 	// CSR is the base64-encoded PEM-encoded CSR to be signed.
 	CSR string
+
+	// DeviceID device identifier
+	DeviceID string
 }
 
 // CertSignResult represents the result of a successful certificate
