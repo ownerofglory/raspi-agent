@@ -11,7 +11,7 @@ COPY Makefile ./
 COPY . ./
 
 ENV CGO_ENABLED=0
-RUN make build
+RUN make build-backend
 
 # Run phase
 FROM alpine:latest
