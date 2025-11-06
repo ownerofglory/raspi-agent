@@ -10,6 +10,7 @@
 - [x] Wake word detection
 - [x] Streaming audio playback
 - [x] Natural conversation via OpenAI APIs
+- [x] Device registration and certificate enrollment
 - [ ] RAG integration
 - [ ] Agent memory
 - [ ] Web dashboard
