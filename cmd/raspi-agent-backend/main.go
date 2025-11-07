@@ -77,6 +77,8 @@ func main() {
 	va := services.NewVoiceAssistant(stt, tts, cmpl)
 	vh := handler.NewVoiceAssistantHandler(va)
 
+	fs := http.FileServer(http.Dir("ui/dist"))
+
 	// Chi setup
 	r := chi.NewRouter()
 
@@ -85,6 +87,8 @@ func main() {
 	r.Post(handler.PostRegisterDeviceURL, deviceHandler.HandlePostRegisterDevice)
 	r.Post(handler.PostEnrollDeviceURL, deviceHandler.HandlePostEnrollDevice)
 	r.Get(handler.GetVersionEndpoint, handler.HandleGetVersion)
+	// UI
+	r.Get(handler.BaseUIPath+"*", http.StripPrefix(handler.BaseUIPath, fs).ServeHTTP)
 
 	httpServer := http.Server{
 		Addr:    cfg.ServerAddr,
