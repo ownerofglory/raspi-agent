@@ -15,6 +15,19 @@ type UserService interface {
 	// GetUser retrieves a single user by ID.
 	// Implementations should return a domain.NotFoundError if no user exists.
 	GetUser(ctx context.Context, id string) (domain.User, error)
+
+	// GetUserByEmail retrieves a user by their email address.
+	//
+	// It returns the corresponding domain.User if found, or an error if
+	// the user does not exist or retrieval fails.
+	GetUserByEmail(ctx context.Context, email string) (domain.User, error)
+
+	// CreateUser creates a new user in the system.
+	//
+	// It accepts a domain.User, persists it, and returns the created user
+	// (which may include generated fields such as ID) or an error if
+	// creation fails.
+	CreateUser(ctx context.Context, user domain.User) (domain.User, error)
 }
 
 // UserRepo defines the persistence interface for user records.
