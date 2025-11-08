@@ -1,13 +1,14 @@
 import './App.css'
-import LandingPage from "./pages/LandingPage.tsx";
+import { Outlet } from "react-router";
+
 
 function App() {
-
   return (
     <>
-        <LandingPage></LandingPage>
+        <Outlet/>
     </>
   )
 }
+
 
 export default App
