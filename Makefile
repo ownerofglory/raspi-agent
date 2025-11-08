@@ -12,6 +12,7 @@ LDFLAGS       := -X 'github.com/ownerofglory/raspi-agent/internal/http/handler.A
 CMD_DIR_BE    := $(shell pwd)/cmd/raspi-agent-backend
 CMD_DIR_ONB   := $(shell pwd)/cmd/raspi-agent-onboard
 CMD_DIR_ONB_LOCAL   := $(shell pwd)/cmd/raspi-agent-onboard-local
+UI_DIR 		  := $(shell pwd)/ui
 BIN_DIR       := $(shell pwd)/bin
 RELEASE_DIR   := $(shell pwd)/release
 
@@ -55,6 +56,12 @@ build-onboard-local: fmt
 	go mod tidy
 	GOOS=$(TARGET_OS_ONB) GOARCH=$(TARGET_ARCH_ONB) \
 	go build -o $(BIN_DIR)/$(TARGET_NAME_ONB_LOCAL) $(CMD_DIR_ONB_LOCAL)/main.go
+
+build-ui:
+	@echo "Building UI"
+	@mkdir -p $(BIN_DIR)/ui/dist
+	npm run --prefix ui build
+	cp -r $(UI_DIR)/dist/* $(BIN_DIR)/ui/dist
 
 # ============================================
 # Dev / Test / Utility

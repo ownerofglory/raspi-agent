@@ -1,0 +1,66 @@
+@tailwind utilities;
+
+/* Theme Variables */
+:root {
+    /* Colors (light mode) */
+    --color-primary: #137fec;
+    --color-background: #f6f7f8;
+    --color-text: #212529;
+    --color-card: #ffffff;
+    --color-border: #e5e7eb;
+    --color-text-muted: #6c757d;
+
+    /* Font */
+    --font-display: 'Space Grotesk', sans-serif;
+
+    /* Border Radius */
+    --radius: 0.25rem;
+    --radius-lg: 0.5rem;
+    --radius-xl: 0.75rem;
+    --radius-full: 9999px;
+}
+
+/* 🌙 Dark Mode */
+.dark {
+    --color-background: #101922;
+    --color-text: #e5e7eb;
+    --color-card: #192734;
+    --color-border: #2d3748;
+    --color-text-muted: #92adc9;
+}
+
+/* 🖋️ Apply to base elements */
+body {
+    background-color: var(--color-background);
+    color: var(--color-text);
+    font-family: var(--font-display);
+}
+
+/* Example utility styles to mimic Tailwind behavior */
+.bg-primary {
+    background-color: var(--color-primary);
+}
+.text-primary {
+    color: var(--color-primary);
+}
+.bg-card {
+    background-color: var(--color-card);
+}
+.border {
+    border: 1px solid var(--color-border);
+}
+
+/* Border radius utilities */
+.rounded {
+    border-radius: var(--radius);
+}
+.rounded-lg {
+    border-radius: var(--radius-lg);
+}
+.rounded-xl {
+    border-radius: var(--radius-xl);
+}
+.rounded-full {
+    border-radius: var(--radius-full);
+}
+
