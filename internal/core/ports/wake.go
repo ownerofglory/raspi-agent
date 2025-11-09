@@ -2,6 +2,8 @@ package ports
 
 import "context"
 
+//go:generate go tool go.uber.org/mock/mockgen -source=wake.go -package=ports -destination=wake_mock.go WakeListener
+
 // WakeListener defines the contract for components capable of detecting
 // a predefined wake word or activation phrase (e.g. “Hey Vicky”, “Raspi”)
 // from live microphone input.

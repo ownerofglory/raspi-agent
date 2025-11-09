@@ -6,6 +6,8 @@ import (
 	"github.com/ownerofglory/raspi-agent/internal/core/domain"
 )
 
+//go:generate go tool go.uber.org/mock/mockgen -source=voice_assistant.go -package=ports -destination=voice_assistant_mock.go VoiceAssistant,VoiceAssistantClient
+
 // VoiceAssistant defines the contract for a full voice interaction pipeline.
 //
 // Implementations of this interface handle the entire voice-assistant flow:

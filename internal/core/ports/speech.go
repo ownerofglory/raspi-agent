@@ -6,6 +6,8 @@ import (
 	"github.com/ownerofglory/raspi-agent/internal/core/domain"
 )
 
+//go:generate go tool go.uber.org/mock/mockgen -source=speech.go -package=ports -destination=speech_mock.go TranscriptionProvider,SpeechProvider
+
 // TranscriptionProvider defines the contract for any service capable of
 // converting spoken audio into text (speech-to-text).
 //

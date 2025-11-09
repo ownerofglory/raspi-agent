@@ -5,6 +5,8 @@ import (
 	"io"
 )
 
+//go:generate go tool go.uber.org/mock/mockgen -source=playback.go -package=ports -destination=playback_mock.go Player
+
 // Player defines the contract for any audio playback implementation.
 //
 // Implementations consume an incoming stream of audio data (as byte slices)

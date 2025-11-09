@@ -7,6 +7,8 @@ import (
 	"github.com/ownerofglory/raspi-agent/internal/core/domain"
 )
 
+//go:generate go tool go.uber.org/mock/mockgen -source=recording.go -package=ports -destination=recording_mock.go Recorder
+
 // Recorder defines the contract for capturing audio input from a microphone
 // or other input device.
 //
