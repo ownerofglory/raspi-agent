@@ -34,3 +34,7 @@ go.work.sum
 # Binaries
 bin/
 release/
+
+# mockfiles
+*_mock.go
+*_gen.go
