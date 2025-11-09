@@ -6,6 +6,8 @@ import App from './App.tsx'
 import { RouterProvider } from "react-router/dom";
 import {createBrowserRouter} from "react-router";
 import LandingPage from "./pages/LandingPage.tsx";
+import LoginPage from "./pages/auth/LoginPage.tsx";
+import Dashboard from "./pages/dashboard/DashboardPage.tsx";
 
 const router = createBrowserRouter(
     [
@@ -19,6 +21,14 @@ const router = createBrowserRouter(
                 },
             ],
         },
+        {
+            path: "/auth/login",
+            element: <LoginPage/>
+        },
+        {
+            path: "/devices",
+            element: <Dashboard/>
+        }
     ],
     {
         basename: "/raspi-agent/ui",
