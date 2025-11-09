@@ -6,6 +6,8 @@ import (
 	"github.com/ownerofglory/raspi-agent/internal/core/domain"
 )
 
+//go:generate go tool go.uber.org/mock/mockgen -source=embedding.go -package=ports -destination=embedding_mock.go EmbeddingProvider
+
 // EmbeddingProvider defines the interface for generating text embeddings.
 // Implementations of this interface convert input text into numerical
 // vector representations suitable for similarity search, clustering,

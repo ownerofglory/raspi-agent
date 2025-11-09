@@ -6,6 +6,8 @@ import (
 	"github.com/ownerofglory/raspi-agent/internal/core/domain"
 )
 
+//go:generate go tool go.uber.org/mock/mockgen -source=device.go -package=ports -destination=device_mock.go DeviceService,DeviceRepo
+
 // DeviceService defines the high-level contract for managing
 // the lifecycle of physical IoT or edge devices — from initial
 // registration (by a user) to secure enrollment (by the device).

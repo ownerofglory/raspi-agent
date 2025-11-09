@@ -6,6 +6,8 @@ import (
 	"github.com/ownerofglory/raspi-agent/internal/core/domain"
 )
 
+//go:generate go tool go.uber.org/mock/mockgen -source=cert.go -package=ports -destination=cert_mock.go EnrollmentHandler
+
 // EnrollmentHandler defines the contract for any component capable
 // of handling certificate enrollment for devices.
 //

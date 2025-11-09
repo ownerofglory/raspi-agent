@@ -6,6 +6,8 @@ import (
 	"github.com/ownerofglory/raspi-agent/internal/core/domain"
 )
 
+//go:generate go tool go.uber.org/mock/mockgen -source=agent_memory.go -package=ports -destination=agent_memory_mock.go AgentMemory
+
 // AgentMemory defines the interface for a component that can recall stored
 // information or "memories" for a given user or context.
 //

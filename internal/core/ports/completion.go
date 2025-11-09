@@ -6,6 +6,8 @@ import (
 	"github.com/ownerofglory/raspi-agent/internal/core/domain"
 )
 
+//go:generate go tool go.uber.org/mock/mockgen -source=completion.go -package=ports -destination=completion_mock.go CompletionProvider,SummaryProvider
+
 // CompletionProvider defines the contract for any service capable of generating
 // text completions in response to a given prompt.
 //
