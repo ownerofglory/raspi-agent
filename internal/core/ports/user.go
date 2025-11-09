@@ -6,6 +6,8 @@ import (
 	"github.com/ownerofglory/raspi-agent/internal/core/domain"
 )
 
+//go:generate go tool go.uber.org/mock/mockgen -source=user.go -package=ports -destination=user_mock.go UserService,UserRepo
+
 // UserService defines the core business logic operations related to users.
 //
 // This interface lives in the **core** (domain/application) layer and expresses
