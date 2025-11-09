@@ -11,8 +11,6 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	mathRand "math/rand"
-
 	"github.com/ownerofglory/raspi-agent/internal/core/domain"
 	"github.com/ownerofglory/raspi-agent/internal/core/ports"
 	"go.uber.org/mock/gomock"
@@ -192,7 +190,11 @@ func GenerateWeakPassword(length int) string {
 	}
 	password := make([]byte, length)
 	for i := range password {
-		password[i] = weakCharset[mathRand.Intn(len(weakCharset))]
+		randInt, err := rand.Int(rand.Reader, big.NewInt(int64(len(weakCharset))))
+		if err != nil {
+			panic(err)
+		}
+		password[i] = weakCharset[randInt.Int64()]
 	}
 	return string(password)
 }
