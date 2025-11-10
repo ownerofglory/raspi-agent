@@ -3,7 +3,7 @@ FROM node:22-alpine AS ui-build
 WORKDIR /ui
 
 COPY ui/package*.json ./
-RUN npm ci
+RUN npm ci --ignore-scripts
 
 COPY ui/ .
 RUN npm run build
