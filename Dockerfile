@@ -1,3 +1,13 @@
+# UI build phase
+FROM node:22-alpine AS ui-build
+WORKDIR /ui
+
+COPY ui/package*.json ./
+RUN npm ci
+
+COPY ui/ .
+RUN npm run build
+
 # Build phase
 FROM golang:1.24 as build
 
@@ -13,12 +23,17 @@ COPY . ./
 ENV CGO_ENABLED=0
 RUN make build-backend
 
+COPY --from=ui-build /ui/dist /app/ui/dist
+
 # Run phase
 FROM alpine:latest
+WORKDIR /app
 
-WORKDIR /root/
+RUN apk --no-cache add ca-certificates
 
-COPY --from=build /app/bin/raspi-agent-backend /usr/local/bin/raspi-agent-backend
+# Copy binary and static assets
+COPY --from=go-build /app/bin/raspi-agent-backend .
+COPY --from=go-build /app/ui/dist ./ui/dist
+
 EXPOSE 8080
-
-CMD ["raspi-agent-backend"]
+CMD ["./raspi-agent-backend"]
