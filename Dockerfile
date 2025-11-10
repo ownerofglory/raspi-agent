@@ -32,8 +32,8 @@ WORKDIR /app
 RUN apk --no-cache add ca-certificates
 
 # Copy binary and static assets
-COPY --from=go-build /app/bin/raspi-agent-backend .
-COPY --from=go-build /app/ui/dist ./ui/dist
+COPY --from=build /app/bin/raspi-agent-backend .
+COPY --from=build /app/ui/dist ./ui/dist
 
 EXPOSE 8080
 CMD ["./raspi-agent-backend"]
