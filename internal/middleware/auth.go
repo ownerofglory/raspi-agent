@@ -2,7 +2,10 @@ package middleware
 
 import (
 	"context"
+	"crypto/x509"
+	"encoding/pem"
 	"errors"
+	"fmt"
 	"log/slog"
 	"net/http"
 	"strings"
@@ -70,6 +73,61 @@ func WithJWT(key string) auth.AuthenticationFunc {
 	}
 }
 
+// WithDeviceCertHeader creates an AuthenticationFunc that extracts and parses
+// an X.509 device certificate provided in a specific HTTP header.
+//
+// The header is expected to contain a PEM-encoded certificate (e.g. the
+// `-----BEGIN CERTIFICATE-----` block). The middleware parses the certificate,
+// retrieves the device identifier from the certificate's Subject Common Name (CN),
+// and stores it in the request context using the `appAuth.DeviceKey`.
+//
+// If the header is missing, malformed, or the certificate cannot be parsed,
+// the authentication will fail and an error will be returned.
+//
+// Example usage:
+//
+//	mux.Handle("/devices/{id}/data",
+//		middleware.WrapFunc(
+//			handleDeviceData,
+//			middleware.Authenticated(middleware.WithDeviceCertHeader("X-Device-Cert")),
+//			middleware.Authorized(middleware.HavingDeviceID("id")),
+//		),
+//	)
+//
+// Example header:
+//
+//	X-Device-Cert: -----BEGIN CERTIFICATE-----\nMIIB...==\n-----END CERTIFICATE-----
+//
+// The resulting context value can be retrieved later with:
+//
+//	deviceID, _ := r.Context().Value(appAuth.DeviceKey).(string)
+func WithDeviceCertHeader(headerName string) auth.AuthenticationFunc {
+	return func(rw http.ResponseWriter, r *http.Request) (auth.Context, error) {
+		certHeader := r.Header.Get(headerName)
+		if certHeader == "" {
+			slog.Error("Certificate header is empty")
+			return nil, errors.New("certificate header is empty")
+		}
+
+		block, _ := pem.Decode([]byte(certHeader))
+		if block == nil {
+			slog.Error("Certificate header is invalid")
+			return nil, errors.New("certificate header is invalid")
+		}
+
+		cert, err := x509.ParseCertificate(block.Bytes)
+		if err != nil {
+			slog.Error("Unable to parse certificate", "error", err)
+			return nil, fmt.Errorf("unable to parse certificate: %w", err)
+		}
+
+		deviceID := cert.Subject.CommonName
+		ctx := context.WithValue(r.Context(), appAuth.DeviceKey, deviceID)
+
+		return auth.NewAuthContext(ctx), nil
+	}
+}
+
 // Authorized wraps an HTTP handler with one or more authorization checks.
 //
 // Each AuthorizationFunc is invoked in order. If any of them return an error,
@@ -90,5 +148,46 @@ func Authorized(authFuncs ...auth.AuthorizationFunc) Middleware {
 
 			h.ServeHTTP(w, r)
 		})
+	}
+}
+
+// HavingDeviceID creates an AuthorizationFunc that ensures the device ID
+// present in the request path matches the device identifier extracted
+// from a previously authenticated certificate.
+//
+// The `param` argument specifies the name of the path parameter that
+// contains the expected device ID (for example, "id" in `/devices/{id}`).
+//
+// If the device ID is missing from the context, the path parameter is not
+// provided, or the values do not match, the request is rejected with an error.
+//
+// Example:
+//
+//	authz := middleware.HavingDeviceID("id")
+//	if err := authz(w, r); err != nil {
+//		http.Error(w, err.Error(), http.StatusForbidden)
+//		return
+//	}
+//
+// Combined with WithDeviceCertHeader, this ensures that a device can only
+// access its own resources, as identified by the certificate Common Name (CN).
+func HavingDeviceID(param string) auth.AuthorizationFunc {
+	return func(rw http.ResponseWriter, r *http.Request) error {
+		aCtx := auth.NewAuthContext(r.Context())
+		deviceID, ok := aCtx.Value(appAuth.DeviceKey).(string)
+		if !ok {
+			slog.Error("Unable to find device id in context")
+			return errors.New("unable to find device id in context")
+		}
+
+		deviceIDParam := r.PathValue(param)
+		if deviceIDParam == "" {
+			return errors.New("missing device id in path")
+		}
+
+		if deviceIDParam != deviceID {
+			return errors.New("forbidden: device id mismatch")
+		}
+		return nil
 	}
 }
