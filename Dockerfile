@@ -27,11 +27,6 @@ COPY --from=ui-build /ui/dist /app/ui/dist
 
 # Run phase
 FROM alpine:latest
-RUN addgroup -S nonroot \
-    && adduser -S nonroot -G nonroot \
-
-USER nonroot
-
 WORKDIR /app
 
 RUN apk --no-cache add ca-certificates
