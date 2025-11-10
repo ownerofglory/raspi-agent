@@ -6,6 +6,14 @@ type RaspiAgentConfig struct {
 	ServerAddr string `env:"SERVER_ADDR" envDefault:"0.0.0.0:8080"`
 	LogLevel   string `env:"LOG_LEVEL" envDefault:"info"`
 
+	// Auth
+	JWTKey string `env:"JWT_KEY" envDefault:""`
+
+	// OAuth2: Google
+	GoogleOAuth2ClientID     string `env:"GOOGLE_CLIENT_ID" envDefault:""`
+	GoogleOAuth2ClientSecret string `env:"GOOGLE_CLIENT_SECRET" envDefault:""`
+	GoogleOAuth2RedirectURL  string `env:"GOOGLE_CLIENT_REDIRECT" envDefault:""`
+
 	// Open AI
 	OpenAIAPIKey string `env:"OPENAI_API_KEY" envDefault:""`
 	OpenAIAPIURL string `env:"OPENAI_API_URL" envDefault:"https://api.openai.com/v1"`

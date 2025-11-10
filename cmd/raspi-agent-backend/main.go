@@ -22,6 +22,8 @@ import (
 	"github.com/ownerofglory/raspi-agent/internal/openaiapi"
 	"github.com/ownerofglory/raspi-agent/internal/persistence"
 	"github.com/ownerofglory/raspi-agent/internal/stepca"
+	"golang.org/x/oauth2"
+	"golang.org/x/oauth2/google"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
@@ -63,6 +65,9 @@ func main() {
 	deviceRepo := persistence.NewDeviceRepo(db)
 	userRepo := persistence.NewUserRepository(db)
 
+	// service setup
+	userService := services.NewUserService(userRepo)
+
 	// AI client setup
 	openAIClient := openai.NewClient(option.WithAPIKey(cfg.OpenAIAPIKey), option.WithBaseURL(cfg.OpenAIAPIURL))
 	tts := openaiapi.NewTextToSpeechClient(&openAIClient)
@@ -77,12 +82,33 @@ func main() {
 	va := services.NewVoiceAssistant(stt, tts, cmpl)
 	vh := handler.NewVoiceAssistantHandler(va)
 
+	loginHandler := handler.NewLoginHandler(cfg.JWTKey, userService)
+	signupHandler := handler.NewSignupHandler(userService)
+
+	// Google OAuth2 config
+	googleConf := &oauth2.Config{
+		ClientID:     cfg.GoogleOAuth2ClientID,
+		ClientSecret: cfg.GoogleOAuth2ClientSecret,
+		RedirectURL:  cfg.GoogleOAuth2RedirectURL,
+		Scopes: []string{
+			"https://www.googleapis.com/auth/userinfo.email",
+			"https://www.googleapis.com/auth/userinfo.profile",
+		},
+		Endpoint: google.Endpoint,
+	}
+	googleHandler := handler.NewGoogleOAuth2Handler(googleConf, []byte(cfg.JWTKey), userService)
+	oauth2Handler := handler.NewOAuth2Handler(googleHandler)
+
 	fs := http.FileServer(http.Dir("ui/dist"))
 
 	// Chi setup
 	r := chi.NewRouter()
 
 	// HTTP handler registration
+	r.Post(handler.PostLoginPath, loginHandler.HandleLogin)
+	r.Post(handler.PostSignupPath, signupHandler.HandleSignup)
+	r.Get(handler.PostAuthOAuth2LoginPath, oauth2Handler.HandleLogin)
+	r.Get(handler.PostAuthOAuth2CallbackPath, oauth2Handler.HandleCallback)
 	r.Post(handler.PostReceiveVoiceAssistance, vh.HandleAssist)
 	r.Post(handler.PostRegisterDeviceURL, deviceHandler.HandlePostRegisterDevice)
 	r.Post(handler.PostEnrollDeviceURL, deviceHandler.HandlePostEnrollDevice)
