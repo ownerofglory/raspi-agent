@@ -4,6 +4,8 @@
 
 ![](https://github.com/ownerofglory/raspi-agent/actions/workflows/build.yaml/badge.svg)
 
+[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=ownerofglory_raspi-agent&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=ownerofglory_raspi-agent)
+
 ### *Currently, in development ...*
 
 ## Planned Features
