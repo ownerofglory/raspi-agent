@@ -1,3 +1,9 @@
+/**
+ * Dashboard page for managing registered Raspberry Pi voice assistants.
+ *
+ * Displays device cards, status indicators, and a top navigation bar.
+ * All device data is currently static but can later be fetched from an API.
+ */
 export default function Dashboard() {
     const devices = [
         {
@@ -104,8 +110,12 @@ export default function Dashboard() {
     );
 }
 
-/* ========== Reusable Components ========== */
-
+/**
+ * Small circular icon-only button used in the Dashboard navigation bar.
+ *
+ * @param props
+ * @param {string} props.icon - Name of the Material Symbol icon to display.
+ */
 function IconButton({ icon }: { icon: string }) {
     return (
         <button className="flex h-10 w-10 cursor-pointer items-center justify-center overflow-hidden rounded-lg bg-transparent text-text-muted-light dark:text-text-muted-dark hover:bg-black/5 dark:hover:bg-white/5">
@@ -114,15 +124,34 @@ function IconButton({ icon }: { icon: string }) {
     );
 }
 
+/**
+ * Card displaying the details and status of a single Raspberry Pi device.
+ *
+ * @param {DeviceCardProps} props - Device information and display options.
+ */
 interface DeviceCardProps {
+    /** Display name of the device */
     name: string;
+
+    /** Hardware model (e.g., Raspberry Pi 4) */
     model: string;
+
+    /** Current online/offline/attention status */
     status: string;
+
+    /** Status indicator color (CSS hex or RGB) */
     color: string;
+
+    /** Additional info such as IP or last-seen time */
     info: string;
+
+    /** Whether the status indicator should animate with a pulsing effect */
     animate?: boolean;
 }
 
+/**
+ * UI card component showing device information inside the dashboard grid.
+ */
 function DeviceCard({
                         name,
                         model,

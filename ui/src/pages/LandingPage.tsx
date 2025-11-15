@@ -1,3 +1,9 @@
+/**
+ * Landing page of the DIY Voice Assistant project.
+ *
+ * Displays marketing content, navigation options, and feature highlights.
+ * This page is fully public and does not require authentication.
+ */
 export default function LandingPage() {
     return (
         <div className="font-display bg-background-light dark:bg-background-dark text-text-light dark:text-text-dark min-h-screen flex flex-col relative">
@@ -28,7 +34,7 @@ export default function LandingPage() {
 
                 <div className="flex items-center gap-2 sm:gap-4">
                     <a
-                        href="#"
+                        href="/raspi-agent/ui/auth/login"
                         className="flex h-10 cursor-pointer items-center justify-center rounded-lg px-4 text-sm font-bold text-text-light dark:text-text-dark hover:bg-black/5 dark:hover:bg-white/5 sm:text-base"
                     >
                         Login
@@ -99,7 +105,14 @@ export default function LandingPage() {
     );
 }
 
-// Reusable feature card component
+/**
+ * Reusable feature card used on the landing page.
+ *
+ * @param {object} props
+ * @param {string} props.icon - Name of a Material Symbol icon.
+ * @param {string} props.title - Title displayed at the top of the card.
+ * @param {string} props.description - Text describing the feature.
+ */
 function FeatureCard({ icon, title, description }: {icon: string, title: string, description: string}) {
     return (
         <div className="flex flex-col gap-2 rounded-xl border border-border-light dark:border-border-dark bg-card-light dark:bg-card-dark p-4">
