@@ -19,9 +19,11 @@ import (
 	"github.com/ownerofglory/raspi-agent/config"
 	"github.com/ownerofglory/raspi-agent/internal/core/services"
 	"github.com/ownerofglory/raspi-agent/internal/http/v1/handler"
+	"github.com/ownerofglory/raspi-agent/internal/middleware"
 	"github.com/ownerofglory/raspi-agent/internal/openaiapi"
 	"github.com/ownerofglory/raspi-agent/internal/persistence"
 	"github.com/ownerofglory/raspi-agent/internal/stepca"
+	authLib "github.com/ownerofglory/raspi-agent/pkg/auth"
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/google"
 	"gorm.io/driver/postgres"
@@ -109,8 +111,17 @@ func main() {
 	r.Post(handler.PostSignupPath, signupHandler.HandleSignup)
 	r.Get(handler.PostAuthOAuth2LoginPath, oauth2Handler.HandleLogin)
 	r.Get(handler.PostAuthOAuth2CallbackPath, oauth2Handler.HandleCallback)
-	r.Post(handler.PostReceiveVoiceAssistance, vh.HandleAssist)
-	r.Post(handler.PostRegisterDeviceURL, deviceHandler.HandlePostRegisterDevice)
+	r.Post(handler.PostReceiveVoiceAssistance, middleware.WrapFunc(
+		vh.HandleAssist,
+		middleware.Authenticated(middleware.WithDeviceCertHeader(middleware.CertHeaderName)),
+		middleware.Authorized(middleware.HavingDeviceID("deviceId")),
+	).ServeHTTP)
+	r.Post(handler.PostRegisterDeviceURL,
+		middleware.WrapFunc(
+			deviceHandler.HandlePostRegisterDevice,
+			middleware.Authenticated(middleware.WithJWT(cfg.JWTKey)),
+			middleware.Authorized(authLib.WithUserId("userId")),
+		).ServeHTTP)
 	r.Post(handler.PostEnrollDeviceURL, deviceHandler.HandlePostEnrollDevice)
 	r.Get(handler.GetVersionEndpoint, handler.HandleGetVersion)
 	// UI
