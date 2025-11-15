@@ -25,6 +25,7 @@ require (
 	github.com/go-faster/errors v0.7.1 // indirect
 	github.com/go-faster/jx v1.1.0 // indirect
 	github.com/go-faster/yaml v0.4.6 // indirect
+	github.com/go-gormigrate/gormigrate/v2 v2.1.5 // indirect
 	github.com/go-jose/go-jose/v3 v3.0.4 // indirect
 	github.com/golang-jwt/jwt/v5 v5.3.0 // indirect
 	github.com/google/go-cmp v0.7.0 // indirect

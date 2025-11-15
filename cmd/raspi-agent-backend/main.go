@@ -22,6 +22,7 @@ import (
 	"github.com/ownerofglory/raspi-agent/internal/middleware"
 	"github.com/ownerofglory/raspi-agent/internal/openaiapi"
 	"github.com/ownerofglory/raspi-agent/internal/persistence"
+	"github.com/ownerofglory/raspi-agent/internal/persistence/migrations"
 	"github.com/ownerofglory/raspi-agent/internal/stepca"
 	authLib "github.com/ownerofglory/raspi-agent/pkg/auth"
 	"golang.org/x/oauth2"
@@ -62,6 +63,12 @@ func main() {
 	// ORM setup
 	dsn := fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%s", cfg.PostgresHost, cfg.PostgresUser, cfg.PostgresPassword, cfg.PostgresDB, cfg.PostgresPort)
 	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
+	err = migrations.UserWithDevice(db)
+	if err != nil {
+		slog.Error("Failed to migrate user and device", "error", err)
+		os.Exit(1)
+		return
+	}
 
 	// Repo setup
 	deviceRepo := persistence.NewDeviceRepo(db)
