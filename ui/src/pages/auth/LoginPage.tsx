@@ -1,4 +1,49 @@
+import {useContext, useState} from "react";
+import AuthCtx from "../../context/auth.ts";
+
+const backendUrl = "http://localhost:8000/raspi-agent/api/v1/auth/login";
+
+/**
+ * Expected response format from the backend login API.
+ */
+interface LoginResult {
+    id: string;
+    token: string;
+}
+
+/**
+ * Login page component.
+ *
+ * Handles user sign-in, sends credentials to the backend,
+ * and stores the returned token/id inside the global AuthContext.
+ */
 export default function LoginPage() {
+    /** User's email/username input */
+    const [email, setEmail] = useState<string>();
+
+    /** User's password input */
+    const [password, setPassword] = useState<string>();
+
+    /** Auth context used to store login results */
+    const authCtx = useContext(AuthCtx);
+
+    /**
+     * Triggered when the user clicks the "Sign In" button.
+     *
+     * Sends a POST request to the backend with email/password.
+     * On success, updates global auth state via AuthContext.
+     */
+    const onLogin = () => {
+        const localLogin = {email, password}
+
+        fetch(backendUrl, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify(localLogin),
+        }).then<LoginResult>(res => res.json())
+        .then(res => authCtx?.setAuth(res))
+    }
+
     return (
         <div className="font-display bg-background-light dark:bg-background-dark text-text-light dark:text-text-dark min-h-screen flex items-center justify-center p-4">
             <div className="w-full max-w-md rounded-xl border border-border-light dark:border-border-dark bg-card-light dark:bg-card-dark shadow-lg">
@@ -48,6 +93,7 @@ export default function LoginPage() {
                                 className="w-full rounded-lg border-border-light bg-background-light p-3 placeholder-text-muted-light
                 focus:border-primary focus:ring-2 focus:ring-primary/30
                 dark:border-border-dark dark:bg-background-dark dark:placeholder-text-muted-dark dark:focus:border-primary"
+                                onInput={e => setEmail((e.target as HTMLInputElement).value)}
                             />
                         </div>
 
@@ -75,6 +121,7 @@ export default function LoginPage() {
                                 className="w-full rounded-lg border-border-light bg-background-light p-3 placeholder-text-muted-light
                 focus:border-primary focus:ring-2 focus:ring-primary/30
                 dark:border-border-dark dark:bg-background-dark dark:placeholder-text-muted-dark dark:focus:border-primary"
+                                onInput={e => setPassword((e.target as HTMLInputElement).value)}
                             />
                         </div>
 
@@ -83,6 +130,7 @@ export default function LoginPage() {
                             className="mt-4 flex h-12 w-full cursor-pointer items-center justify-center gap-2 overflow-hidden
               rounded-lg bg-primary px-6 text-base font-bold text-white shadow-lg shadow-primary/30
               transition-all hover:bg-primary/90"
+                            onClick={() => onLogin()}
                         >
                             <span className="truncate">Sign In</span>
                         </button>
