@@ -14,6 +14,9 @@ import (
 	"github.com/ownerofglory/raspi-agent/pkg/auth"
 )
 
+// CertHeaderName Name of the HTTP header that contains the certificate
+const CertHeaderName = "X-Forwarded-Tls-Client-Cert"
+
 // Authenticated wraps an HTTP handler with an authentication check.
 //
 // It accepts an AuthenticationFunc, which inspects the incoming request
